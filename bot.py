@@ -2,7 +2,7 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q")
 
 # Меню с кнопками
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
