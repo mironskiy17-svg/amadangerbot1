@@ -2,7 +2,7 @@ import os
 import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
-
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
 GEMINI_API_KEY = os.environ.get("AIzaSyCZRvt0hHiqvR1e9p42P30BXCV9NIoF6FU")
 
