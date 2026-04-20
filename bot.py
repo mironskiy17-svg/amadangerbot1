@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
-GEMINI_KEY = os.environ.get("AIzaSyDOMhuvvK2fdqMCoF8msiBKu_VayOpivjE")
+GEMINI_KEY = os.environ.get("AIzaSyDwweXrCPNx54ozsHbpX5LSpwa8qfDYtSU")
 
 def ask_gemini(prompt):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
