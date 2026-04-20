@@ -11,7 +11,12 @@ def ask_gemini(prompt):
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, json=data)
     result = response.json()
-    return result["candidates"][0]["content"]["parts"][0]["text"]
+    if "candidates" in result:
+        return result["candidates"][0]["content"]["parts"][0]["text"]
+    elif "error" in result:
+        return f"Ошибка: {result['error']['message']}"
+    else:
+        return str(result)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
