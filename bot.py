@@ -7,7 +7,7 @@ TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
 GEMINI_API_KEY = os.environ.get("AIzaSyCZRvt0hHiqvR1e9p42P30BXCV9NIoF6FU")
 
 def ask_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
     data = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, json=data)
     result = response.json()
