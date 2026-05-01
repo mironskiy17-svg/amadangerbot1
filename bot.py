@@ -1,24 +1,63 @@
 import os
-import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
-TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
-GEMINI_API_KEY = os.environ.get("AIzaSyCZRvt0hHiqvR1e9p42P30BXCV9NIoF6FU")
+import requests
 
-def ask_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_KEY}"
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
-    response = requests.post(url, json=data)
-    result = response.json()
-    if "candidates" in result:
-        return result["candidates"][0]["content"]["parts"][0]["text"]
-    elif "error" in result:
-        return f"Ошибка: {result['error']['message']}"
-    else:
-        return str(result)
+# ================== НАСТРОЙКИ ==================
+TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
+
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+GROQ_API_KEY = "import os
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+import requests
+
+# ================== НАСТРОЙКИ ==================
+TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
+
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+GROQ_API_KEY = "gsk_вставь_сюда_свой_ключ_полностью"
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+MODEL = "llama-3.3-70b-versatile"
+
+# ===============================================
+
+def ask_groq(prompt: str, history=None) -> str:
+    if history is None:
+        history = []
+    
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    messages = [
+        {"role": "system", "content": "Ты весёлый, добрый и умный друг ребёнка 8 лет. Отвечай просто, весело, с эмодзи и по-детски."}
+    ] + history + [{"role": "user", "content": prompt}]
+    
+    data = {
+        "model": MODEL,
+        "messages": messages,
+        "temperature": 0.8,
+        "max_tokens": 700
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=15)
+        result = response.json()
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"].strip()
+        else:
+            return "Что-то пошло не так 😔 Попробуй ещё раз!"
+    except:
+        return "Не могу сейчас ответить... Попробуй позже!"
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["history"] = []  # очищаем историю при /start
+    
     keyboard = [
         [InlineKeyboardButton("😂 Мемы", callback_data="memes"),
          InlineKeyboardButton("📺 Мультики", callback_data="cartoons")],
@@ -28,25 +67,113 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
          InlineKeyboardButton("🧠 Развивашки", callback_data="edu")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
     await update.message.reply_text(
-        "Привет! 👋 Я твой умный бот!\nЧто хочешь найти?",
+        "Привет! 👋 Я твой весёлый бот-друг!\nЧто хочешь сегодня сделать?",
         reply_markup=reply_markup
     )
+
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    
     prompts = {
-        "memes": "Ты весёлый друг ребёнка 8 лет. Расскажи 3 смешные идеи для мемов для детей. Будь креативным и каждый раз разным!",
-        "cartoons": "Ты эксперт по мультикам для детей 8 лет. Порекомендуй 3 классных мультика которые сейчас популярны. Каждый раз давай разные рекомендации!",
-        "jokes": "Расскажи 3 смешные детские шутки для ребёнка 8 лет. Каждый раз новые и разные!",
-        "games": "Посоветуй 3 классные игры для ребёнка 8 лет. Каждый раз разные советы!",
-        "music": "Порекомендуй весёлую детскую музыку для ребёнка 8 лет. Каждый раз новые рекомендации!",
-        "edu": "Предложи 3 интересные развивающие игры для ребёнка 8 лет. Каждый раз разные и творческие!",
+        "memes": "Придумай 3 смешные идеи для мемов...",
+        "cartoons": "Порекомендуй 3 крутых мультика...",
+        "jokes": "Расскажи 3 весёлые шутки...",
+        "games": "Посоветуй 3 интересные игры...",
+        "music": "Порекомендуй весёлую музыку...",
+        "edu": "Предложи 3 развивающие занятия...",
     }
-    prompt = prompts.get(query.data, "Расскажи что-то интересное для ребёнка 8 лет!")
+    
+    prompt = prompts.get(query.data, "Расскажи что-то интересное!")
+    
     await query.edit_message_text(text="⏳ Думаю...")
-    answer = ask_gemini(prompt)
+    
+    answer = ask_groq(prompt, context.user_data.get("history", []))
+    
+    # Сохраняем в историю
+    if "history" not in context.user_data:
+        context.user_data["history"] = []
+    context.user_data["history"].append({"role": "user", "content": prompt})
+    context.user_data["history"].append({"role": "assistant", "content": answer})
+    
+    # Оставляем кнопки
+    keyboard = [ ... ]  # (те же кнопки, как раньше)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(text=answer, reply_markup=reply_markup)
+
+
+async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_message = update.message.text
+    
+    await update.message.reply_text("⏳ Думаю...")
+    
+    answer = ask_groq(user_message, context.user_data.get("history", []))
+    
+    # Сохраняем историю
+    if "history" not in context.user_data:
+        context.user_data["history"] = []
+    context.user_data["history"].append({"role": "user", "content": user_message})
+    context.user_data["history"].append({"role": "assistant", "content": answer})
+    
+    await update.message.reply_text(answer)
+
+
+# ================== ЗАПУСК БОТА ==================
+if __name__ == "__main__":
+    if GROQ_API_KEY == "gsk_вставь_сюда_свой_ключ_полностью":
+        print("❌ Ты забыл вставить свой Groq ключ!")
+    else:
+        app = ApplicationBuilder().token(TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CallbackQueryHandler(button))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+        print("✅ Бот успешно запущен!")
+        app.run_polling()"
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+MODEL = "llama-3.3-70b-versatile"
+
+# ===============================================
+
+def ask_groq(prompt: str, history=None) -> str:
+    if history is None:
+        history = []
+    
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    messages = [
+        {"role": "system", "content": "Ты весёлый, добрый и умный друг ребёнка 8 лет. Отвечай просто, весело, с эмодзи и по-детски."}
+    ] + history + [{"role": "user", "content": prompt}]
+    
+    data = {
+        "model": MODEL,
+        "messages": messages,
+        "temperature": 0.8,
+        "max_tokens": 700
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=15)
+        result = response.json()
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"].strip()
+        else:
+            return "Что-то пошло не так 😔 Попробуй ещё раз!"
+    except:
+        return "Не могу сейчас ответить... Попробуй позже!"
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["history"] = []  # очищаем историю при /start
+    
     keyboard = [
         [InlineKeyboardButton("😂 Мемы", callback_data="memes"),
          InlineKeyboardButton("📺 Мультики", callback_data="cartoons")],
@@ -56,16 +183,69 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
          InlineKeyboardButton("🧠 Развивашки", callback_data="edu")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        "Привет! 👋 Я твой весёлый бот-друг!\nЧто хочешь сегодня сделать?",
+        reply_markup=reply_markup
+    )
+
+
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    prompts = {
+        "memes": "Придумай 3 смешные идеи для мемов...",
+        "cartoons": "Порекомендуй 3 крутых мультика...",
+        "jokes": "Расскажи 3 весёлые шутки...",
+        "games": "Посоветуй 3 интересные игры...",
+        "music": "Порекомендуй весёлую музыку...",
+        "edu": "Предложи 3 развивающие занятия...",
+    }
+    
+    prompt = prompts.get(query.data, "Расскажи что-то интересное!")
+    
+    await query.edit_message_text(text="⏳ Думаю...")
+    
+    answer = ask_groq(prompt, context.user_data.get("history", []))
+    
+    # Сохраняем в историю
+    if "history" not in context.user_data:
+        context.user_data["history"] = []
+    context.user_data["history"].append({"role": "user", "content": prompt})
+    context.user_data["history"].append({"role": "assistant", "content": answer})
+    
+    # Оставляем кнопки
+    keyboard = [ ... ]  # (те же кнопки, как раньше)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
     await query.edit_message_text(text=answer, reply_markup=reply_markup)
+
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
-    prompt = f"Ты весёлый и умный друг ребёнка 8 лет. Отвечай просто, весело и интересно. Вопрос: {user_message}"
-    answer = ask_gemini(prompt)
+    
+    await update.message.reply_text("⏳ Думаю...")
+    
+    answer = ask_groq(user_message, context.user_data.get("history", []))
+    
+    # Сохраняем историю
+    if "history" not in context.user_data:
+        context.user_data["history"] = []
+    context.user_data["history"].append({"role": "user", "content": user_message})
+    context.user_data["history"].append({"role": "assistant", "content": answer})
+    
     await update.message.reply_text(answer)
 
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
-app.run_polling()
+
+# ================== ЗАПУСК БОТА ==================
+if __name__ == "__main__":
+    if GROQ_API_KEY == "gsk_вставь_сюда_свой_ключ_полностью":
+        print("❌ Ты забыл вставить свой Groq ключ!")
+    else:
+        app = ApplicationBuilder().token(TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CallbackQueryHandler(button))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat))
+        print("✅ Бот успешно запущен!")
+        app.run_polling()
