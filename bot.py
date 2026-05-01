@@ -16,7 +16,7 @@ import requests
 TOKEN = "7625173287:AAHLZp-7hOly8t9Qbw_YT0V8536lXcBuX-Q"
 
 # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-GROQ_API_KEY = "gsk_вставь_сюда_свой_ключ_полностью"
+GROQ_API_KEY = "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"
 # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
 MODEL = "llama-3.3-70b-versatile"
